@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/static/css/main.85f6d1b4.css",
+    "main.js": "/static/js/main.a801dfa9.js",
+    "static/media/pittLaneMapDraft.jpg": "/static/media/pittLaneMapDraft.5b07f1b85346c1170b95.jpg",
+    "index.html": "/index.html",
+    "main.85f6d1b4.css.map": "/static/css/main.85f6d1b4.css.map",
+    "main.a801dfa9.js.map": "/static/js/main.a801dfa9.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.85f6d1b4.css",
+    "static/js/main.a801dfa9.js"
+  ]
+}
