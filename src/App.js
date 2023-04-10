@@ -18,14 +18,14 @@ function App() {
     event.preventDefault();
     const item = { name: e[0], description: e[1], left: e[2], top: e[3] }
     await axios
-      .post(process.env.REACT_APP_backend_url, item)
+      .post(process.env.REACT_APP_remote_backend_url, item)
     loadMarkers();
   }
 
   const handleDelete = async (event, id) => {
     event.preventDefault();
     await axios
-      .delete(process.env.REACT_APP_backend_url + id + "/")
+      .delete(process.env.REACT_APP_remote_backend_url + id + "/")
     loadMarkers();
   }
 
@@ -33,12 +33,12 @@ function App() {
     event.preventDefault();
     const item = { name: e[1], description: e[2], left: e[3], top: e[4] }
     await axios
-      .put(process.env.REACT_APP_backend_url + e[0] + "/", item)
+      .put(process.env.REACT_APP_remote_backend_url + e[0] + "/", item)
     loadMarkers();
   }
 
   const loadMarkers = () => {
-    fetch(process.env.REACT_APP_backend_url)
+    fetch(process.env.REACT_APP_remote_backend_url)
       .then(res => res.json())
       .then(
         (result) => {
@@ -59,19 +59,21 @@ function App() {
 
     const editingModeOn = () => {
       setEditing(true);
+      setName(props.name);
+      setDescription(props.description);
     };
 
     if (editing) {
       return (
         <form onSubmit={event => handleEdit(event, [props.id, name, description, props.left, props.top])}>
-            <label>Enter the plant name:</label>
+            <label>Edit the plant name:</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
 
-            <label>Enter the plant description:</label>
+            <label>Edit the plant description:</label>
             <input
               type="text"
               value={description}
