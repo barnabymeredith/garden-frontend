@@ -18,19 +18,27 @@ function App() {
     event.preventDefault();
     const item = { name: e[0], description: e[1], left: e[2], top: e[3] }
     await axios
-      .post("/api/markers/", item)
+      .post(process.env.REACT_APP_backend_url, item)
     loadMarkers();
   }
 
   const handleDelete = async (event, id) => {
     event.preventDefault();
     await axios
-      .delete("/api/markers/" + id)
+      .delete(process.env.REACT_APP_backend_url + id + "/")
+    loadMarkers();
+  }
+
+  const handleEdit = async (event, e) => {
+    event.preventDefault();
+    const item = { name: e[1], description: e[2], left: e[3], top: e[4] }
+    await axios
+      .put(process.env.REACT_APP_backend_url + e[0] + "/", item)
     loadMarkers();
   }
 
   const loadMarkers = () => {
-    fetch("/api/markers/")
+    fetch(process.env.REACT_APP_backend_url)
       .then(res => res.json())
       .then(
         (result) => {
@@ -47,18 +55,45 @@ function App() {
   const MarkerContent = (props) => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [editing, setEditing] = useState(false);
+
+    const editingModeOn = () => {
+      setEditing(true);
+    };
+
+    if (editing) {
+      return (
+        <form onSubmit={event => handleEdit(event, [props.id, name, description, props.left, props.top])}>
+            <label>Enter the plant name:</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+
+            <label>Enter the plant description:</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <input type="submit" />
+          </form>
+      )
+    }
     if (props.id) {
       return (
         <div style={ { width: '150px' } }>
           <form onSubmit={event => handleDelete(event, [props.id])} className="position-absolute top-0 end-0">
             <input type="submit" value="X" style={ { background: 'red', static: 'right'} } />
           </form>
+          <button onClick={editingModeOn} value="E" style={ { background: 'green', static: 'left', height: '25px', width: '20px' } } />
           <p>{props.name}</p>
           <p>{props.description}</p>
         </div>
       )
     }
-    else {
+    if (!props.id) {
       return (
           <form onSubmit={event => handleSubmit(event, [name, description, props.left, props.top])}>
             <label>Enter the plant name:</label>
@@ -104,9 +139,9 @@ function App() {
     return <div>Loading...</div>;
   } else {
     return (
-      <div style={{ width: '480px' }}>
+      <div style={{ width: '780px' }}>
         <ImageMarker
-          src={require('./pittLaneMapDraft.jpg')}
+          src={require('./image01.jpg')}
           markers={markers}
           onAddMarker={(marker) => setMarkers([...markers, marker])}
           markerComponent={CustomMarker}
