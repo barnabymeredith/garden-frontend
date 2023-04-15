@@ -10,43 +10,79 @@ import axios from 'axios';
 function App() {
 
   const [error, setError] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-
   const [markers, setMarkers] = useState([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState(null);
+  const [isPictureSelected, setIsPictureSelected] = useState(false);
+  const [pictures, setPictures] = useState(false);
+  const [picture, setPicture] = useState(null);
+
+  const instance = axios.create({
+    baseURL: process.env.REACT_APP_backend_url,
+    headers: {
+      common: {
+        Authorization: `Bearer ${token}`
+      }
+    },
+    timeout: 5000,
+  });
+
+  const handleLogin = async (event, e) => {
+    event.preventDefault();
+    await instance
+      .post('token/', {
+        username: e[0],
+        password: e[1]
+      })
+      .then(response => {
+        console.log(response.data.access);
+        setToken(response.data.access);
+        setIsAuthenticated(true);
+        setPictures()
+        // Save the token to local storage or state
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }
 
   const handleSubmit = async (event, e) => {
     event.preventDefault();
     const item = { name: e[0], description: e[1], left: e[2], top: e[3] }
-    await axios
-      .post(process.env.REACT_APP_remote_backend_url, item)
+    await instance
+      .post('markers/', item)
     loadMarkers();
   }
 
   const handleDelete = async (event, id) => {
     event.preventDefault();
-    await axios
-      .delete(process.env.REACT_APP_remote_backend_url + id + "/")
+    await instance
+      .delete('markers/' + id + "/")
     loadMarkers();
   }
 
   const handleEdit = async (event, e) => {
     event.preventDefault();
     const item = { name: e[1], description: e[2], left: e[3], top: e[4] }
-    await axios
-      .put(process.env.REACT_APP_remote_backend_url + e[0] + "/", item)
+    await instance
+      .put('markers/' + e[0] + "/", item)
     loadMarkers();
   }
 
-  const loadMarkers = () => {
-    fetch(process.env.REACT_APP_remote_backend_url)
-      .then(res => res.json())
+  const handlePicture = async (event, file_url) => {
+    event.preventDefault();
+    setPicture(file_url);
+    setIsPictureSelected(true);
+  }
+
+  const loadMarkers = async () => {
+    await instance
+      .get('markers/')
       .then(
         (result) => {
-          setIsLoaded(true);
-          setMarkers(result);
+          setMarkers(result.data);
         },
         (error) => {
-          setIsLoaded(true);
           setError(error);
         }
       )
@@ -66,30 +102,30 @@ function App() {
     if (editing) {
       return (
         <form onSubmit={event => handleEdit(event, [props.id, name, description, props.left, props.top])}>
-            <label>Edit the plant name:</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+          <label>Edit the plant name:</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
 
-            <label>Edit the plant description:</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            <input type="submit" />
-          </form>
+          <label>Edit the plant description:</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <input type="submit" />
+        </form>
       )
     }
     if (props.id) {
       return (
-        <div style={ { width: '150px' } }>
+        <div style={{ width: '150px' }}>
           <form onSubmit={event => handleDelete(event, [props.id])} className="position-absolute top-0 end-0">
-            <input type="submit" value="X" style={ { background: 'red', static: 'right'} } />
+            <input type="submit" value="X" style={{ background: 'red', static: 'right' }} />
           </form>
-          <button onClick={editingModeOn} value="E" style={ { background: 'green', static: 'left', height: '25px', width: '20px' } } />
+          <button onClick={editingModeOn} value="E" style={{ background: 'green', static: 'left', height: '25px', width: '20px' }} />
           <p>{props.name}</p>
           <p>{props.description}</p>
         </div>
@@ -97,22 +133,22 @@ function App() {
     }
     if (!props.id) {
       return (
-          <form onSubmit={event => handleSubmit(event, [name, description, props.left, props.top])}>
-            <label>Enter the plant name:</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+        <form onSubmit={event => handleSubmit(event, [name, description, props.left, props.top])}>
+          <label>Enter the plant name:</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
 
-            <label>Enter the plant description:</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            <input type="submit" />
-          </form>
+          <label>Enter the plant description:</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <input type="submit" />
+        </form>
       )
     }
   }
@@ -129,21 +165,60 @@ function App() {
     );
   };
 
+  const LoginForm = () => {
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    return (
+      <form onSubmit={event => handleLogin(event, [username, password])}>
+        <label>Enter username:</label>
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+
+        <label>Enter password:</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <input type="submit" />
+      </form>)
+  };
+
   useEffect(() => {
-    loadMarkers();
+    if (isAuthenticated) {
+      loadMarkers();
+    }
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadMarkers();
+    }
   }, [])
 
 
 
   if (error) {
     return <div>Error: {error.message}</div>;
-  } else if (!isLoaded) {
-    return <div>Loading...</div>;
-  } else {
-    return (
-      <div style={{ width: '780px' }}>
+  }
+  if (!isAuthenticated) {
+    return <LoginForm />;
+  }
+  if (isAuthenticated) {
+    if (!isPictureSelected) {
+      return (
+        <form onSubmit={event => handlePicture(event, ['opposite_eatery_border.jpg'])}>
+        <input value="opposite eatery border" type="submit" />
+      </form>
+      );
+    }
+    else {
+      return (<div style={{ width: '780px' }}>
         <ImageMarker
-          src={require('./image01.jpg')}
+          src={picture}
           markers={markers}
           onAddMarker={(marker) => setMarkers([...markers, marker])}
           markerComponent={CustomMarker}
@@ -151,7 +226,8 @@ function App() {
           bufferTop={3}
         />
       </div>
-    );
+      );
+    }
   }
 
 }
