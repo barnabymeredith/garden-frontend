@@ -14,8 +14,13 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(null);
   const [isPictureSelected, setIsPictureSelected] = useState(false);
-  const [pictures, setPictures] = useState(false);
   const [picture, setPicture] = useState(null);
+
+
+  const dict = {
+    'opposite_eatery_border.jpg': 1,
+    'pittLaneMapDraft.jpg': 2
+  }
 
   const instance = axios.create({
     baseURL: process.env.REACT_APP_backend_url,
@@ -38,7 +43,6 @@ function App() {
         console.log(response.data.access);
         setToken(response.data.access);
         setIsAuthenticated(true);
-        setPictures()
         // Save the token to local storage or state
       })
       .catch(error => {
@@ -48,7 +52,7 @@ function App() {
 
   const handleSubmit = async (event, e) => {
     event.preventDefault();
-    const item = { name: e[0], description: e[1], left: e[2], top: e[3] }
+    const item = { name: e[0], description: e[1], left: e[2], top: e[3], picture: dict[picture] }
     await instance
       .post('markers/', item)
     loadMarkers();
@@ -77,7 +81,7 @@ function App() {
 
   const loadMarkers = async () => {
     await instance
-      .get('markers/')
+      .get(`markers/?picture=${dict[picture]}`)
       .then(
         (result) => {
           setMarkers(result.data);
@@ -191,15 +195,7 @@ function App() {
     if (isAuthenticated) {
       loadMarkers();
     }
-  }, [isAuthenticated])
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadMarkers();
-    }
-  }, [])
-
-
+  }, [picture])
 
   if (error) {
     return <div>Error: {error.message}</div>;
@@ -210,9 +206,14 @@ function App() {
   if (isAuthenticated) {
     if (!isPictureSelected) {
       return (
-        <form onSubmit={event => handlePicture(event, ['opposite_eatery_border.jpg'])}>
-        <input value="opposite eatery border" type="submit" />
-      </form>
+        <div>
+          <form onSubmit={event => handlePicture(event, ['opposite_eatery_border.jpg'])}>
+            <input value="opposite eatery border" type="submit" />
+          </form>
+          <form onSubmit={event => handlePicture(event, ['pittLaneMapDraft.jpg'])}>
+            <input value="square" type="submit" />
+          </form>
+        </div>
       );
     }
     else {
